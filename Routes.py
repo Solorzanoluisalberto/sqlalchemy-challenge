@@ -57,8 +57,8 @@ def precipitation():
     all_precipitation = []
     for date, prcp in results:
         precipitation_dict = {}
-        precipitation_dict["date"] = date
-        precipitation_dict["prcp"] = prcp
+        precipitation_dict["Date"] = date
+        precipitation_dict["Precipitation in"] = prcp
         all_precipitation.append(precipitation_dict)
 
     return jsonify(all_precipitation)
@@ -71,10 +71,14 @@ def stations():
     # Query all stations
     results = session.query(Station.station, Station.name).all()
     session.close()
-    Station_list = list(results) #list(np.ravel(results))
-#     Station_list = []
-#     for stat in results:
-#         Station_list.append(stat)
+#     Station_list = list(results) #list(np.ravel(results))
+    Station_list = []
+    for stat in results:
+        d = {
+        "Station":stat[0],
+        "Station Name":stat[1]
+        }
+        Station_list.append(d)
     
     return jsonify(Station_list)
 
@@ -93,7 +97,11 @@ def tobs():
 #     temp_obser_12 = list(np.ravel(results))
     tobs_list = []
     for tob in results:
-        tobs_list.append(tob)
+        d={
+        "Date":tob[0],
+        "Temperature":tob[1]
+        }
+        tobs_list.append(d)
     return jsonify(tobs_list)
 
 # When given the start only, calculate `TMIN`, `TAVG`, and `TMAX` for all dates greater than and equal to the start date.
@@ -128,7 +136,7 @@ def range(start_date,end_date):
     #     range_list = list(range_calc)
     #     for date in range_calc:
         for r in range_calc:
-            range_list.append(f'date: {r.Date} Min temperature:{r.Min} Avg temperature:{round(r.Avg,2)}, Max temperature: {r.Max}')
+            range_list.append(f'Date: {r.Date}, Min temperature:{r.Min}, Avg temperature:{round(r.Avg,2)}, Max temperature: {r.Max}')
     else:
         range_list.append(f'Incorrect date {start_date}/{end_date} format, should be YYYY-MM-DD/YYYY-MM-DD')
     # Return JSON List calculate `TMIN`, `TAVG`, and `TMAX` range
