@@ -7,7 +7,6 @@ from sqlalchemy import create_engine, func
 import datetime as dt
 from flask import Flask, jsonify
 
-
 #################################################
 # Database Setup
 #################################################
@@ -34,12 +33,13 @@ app = Flask(__name__)
 def Home_page():
     """List all available api routes."""
     return (
-        f"Available Routes (replace <date> with date in yyyy-mm-dd format):<br>"
+        f"Available Routes:<br>"
+        f"==================================================<br>"
         f"/api/v1.0/precipitation<br>"
         f"/api/v1.0/stations<br>"
         f"/api/v1.0/tobs<br>"
-        f"/api/v1.0/&lt;date&gt;<br>"
-        f"/api/v1.0/&lt;date&gt;/&lt;date&gt;<br>"
+        f"/api/v1.0/&lt;date&gt; (replace &lt;date&gt; with date in yyyy-mm-dd format)<br>"
+        f"/api/v1.0/&lt;date&gt;/&lt;date&gt; (replace &lt;date&gt;/&lt;date&gt; with date in yyyy-mm-dd/yyyy-mm-dd format)<br>"
     )
 
 @app.route("/api/v1.0/precipitation")
@@ -71,7 +71,7 @@ def stations():
     # Query all stations
     results = session.query(Station.station, Station.name).all()
     session.close()
-    Station_list = list(results)#list(np.ravel(results))
+    Station_list = list(results) #list(np.ravel(results))
 #     Station_list = []
 #     for stat in results:
 #         Station_list.append(stat)
@@ -100,32 +100,37 @@ def tobs():
 # Start Day Route
 @app.route("/api/v1.0/<start_date>")
 def start(start_date):
-    session = Session(engine)
-    start_calc = session.query(Measurement.date, func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
-    filter(Measurement.date >= start_date).\
-    group_by(Measurement.date).all()
-    session.close()
-    # Convert List of Tuples Into Normal List
-    start_list = list(start_calc)
-    # Return JSON List calculate `TMIN`, `TAVG`, and `TMAX`
-    return jsonify(start_list)
+    range_list = []
+    if len(start_date) == 10:
+        session = Session(engine)
+        range_calc = session.query(Measurement.date.label("Date"), func.min(Measurement.tobs).label("Min"),\
+                               func.avg(Measurement.tobs).label("Avg"), func.max(Measurement.tobs).label("Max")).\
+        filter(Measurement.date >= start_date).\
+        group_by(Measurement.date).all()
+        session.close()
+        for r in range_calc:
+            range_list.append(f'date: {r.Date} Min temperature:{r.Min} Avg temperature:{round(r.Avg,2)}, Max temperature: {r.Max}')       
+    else:
+        range_list.append(f'Incorrect date {start_date} format, should be YYYY-MM-DD')
+    return jsonify(range_list)
 
 @app.route("/api/v1.0/<start_date>/<end_date>")
 def range(start_date,end_date):
-    session = Session(engine)
-    range_calc = session.query(Measurement.date.label("Date"), func.min(Measurement.tobs).label("Min"),\
-                               func.avg(Measurement.tobs).label("Avg"), func.max(Measurement.tobs).label("Max")).\
-    filter(Measurement.date.between(start_date,end_date)).\
-    group_by(Measurement.date).all()
-    session.close()
     range_list = []
-    # Convert List of Tuples Into Normal List
-#     range_list = list(range_calc)
-#     for date in range_calc:
-
-    for r in range_calc:
-        range_list.append(f'date: {r.Date} Min temperature:{r.Min} Avg temperature:{round(r.Avg,2)}, Max temperature: {r.Max}')
-  
+    if len(start_date) == 10 and len(end_date) == 10:
+        session = Session(engine)
+        range_calc = session.query(Measurement.date.label("Date"), func.min(Measurement.tobs).label("Min"),\
+                                   func.avg(Measurement.tobs).label("Avg"), func.max(Measurement.tobs).label("Max")).\
+        filter(Measurement.date.between(start_date,end_date)).\
+        group_by(Measurement.date).all()
+        session.close()
+        # Convert List of Tuples Into Normal List
+    #     range_list = list(range_calc)
+    #     for date in range_calc:
+        for r in range_calc:
+            range_list.append(f'date: {r.Date} Min temperature:{r.Min} Avg temperature:{round(r.Avg,2)}, Max temperature: {r.Max}')
+    else:
+        range_list.append(f'Incorrect date {start_date}/{end_date} format, should be YYYY-MM-DD/YYYY-MM-DD')
     # Return JSON List calculate `TMIN`, `TAVG`, and `TMAX` range
     return jsonify(range_list)
 
