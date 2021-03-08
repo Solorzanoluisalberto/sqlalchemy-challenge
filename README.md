@@ -1,3 +1,16 @@
+
+Home Work Done:
+climate_starter.ipynb
+## Step 1 - Climate Analysis and Exploration (done)
+# Precipitation Analysis (done)
+# Station Analysis (done)
+## Step 2 - Climate App (done)
+# Routes (done)
+## Bonus: Other Recommended Analyses
+# Temperature Analysis I (done)
+# Temperature Analysis II (working on)
+
+###########################################################
 # SQLAlchemy Homework - Surfs Up!
 
 ### Before You Begin
